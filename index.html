@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pikachu Vocabulary Match – Theo mẫu</title>
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;background:#eef8ee;font-family:Arial,Helvetica,sans-serif;color:#245b2b;
+ min-height:100vh;display:flex;justify-content:center;
+}
+.page{width:min(100%,900px);padding:10px 8px 18px}
+.top{
+ height:74px;background:linear-gradient(#fff,#f7fff7);border:2px solid #35ad43;
+ border-radius:17px;display:grid;grid-template-columns:repeat(3,1fr);
+ align-items:center;text-align:center;box-shadow:0 2px 5px #0001;margin-bottom:12px
+}
+.stat-label{font-size:12px;color:#6aa76f;margin-bottom:1px}.stat-value{font-size:23px;font-weight:800;color:#2e8b38}
+.board-wrap{
+ background:#f7fff7;border:2px solid #38ad45;border-radius:9px;
+ padding:4px;box-shadow:0 2px 5px #0002;overflow:hidden
+}
+.board{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:3px}
+.tile{
+ min-width:0;aspect-ratio:1.35/1;border:1px solid #9ad8a0;border-radius:5px;
+ background:linear-gradient(145deg,#fff,#f1fbf2);color:#244f28;
+ display:flex;align-items:center;justify-content:center;text-align:center;
+ padding:4px;cursor:pointer;position:relative;box-shadow:inset 0 0 0 1px #ffffff;
+ transition:transform .08s,background .08s,border .08s
+}
+.tile:hover{background:#eaffeb}
+.tile.en{font-size:clamp(9px,1.35vw,14px);font-weight:800}
+.tile.vi{font-size:clamp(8px,1.25vw,13px);font-weight:700}
+.tile .flag{position:absolute;left:3px;top:2px;font-size:7px;color:#6ca871;font-weight:800}
+.illustration{width:62%;height:54%;object-fit:contain;display:block;margin:5px auto 1px}
+.tile.en{flex-direction:column;gap:1px}
+.tile.en .cardtext{font-size:clamp(8px,1.15vw,13px);font-weight:800;line-height:1.1}
+.tile.vi .cardtext{font-size:clamp(8px,1.25vw,13px);font-weight:700;line-height:1.15}
+@media(max-width:600px){.illustration{width:68%;height:52%}.tile.en .cardtext,.tile.vi .cardtext{font-size:9px}}
+
+.tile.selected{border:2px solid #f28c28;background:#fff5df;transform:scale(.98)}
+.tile.correct{border:2px solid #2db34a;background:#dff7e2}
+.tile.wrong{border:2px solid #e34b4b;background:#ffe4e4}
+.tile.matched{visibility:hidden;pointer-events:none}
+.controls{
+ display:flex;justify-content:center;gap:7px;margin:10px 0;flex-wrap:wrap
+}
+.btn{border:1px solid #5ebd69;background:#fff;color:#26732e;border-radius:8px;padding:7px 12px;font-weight:700;cursor:pointer}
+.btn:hover{background:#e7f9e9}
+.message{text-align:center;min-height:23px;font-size:13px;font-weight:700;color:#4e7f53;margin:5px}
+.message.good{color:#238536}.message.bad{color:#c43838}
+.bar{height:7px;background:#d8edd9;border-radius:10px;overflow:hidden;margin:7px 1px}
+.bar i{display:block;width:0;height:100%;background:#38ad45;transition:.2s}
+.legend{text-align:center;font-size:11px;color:#6c936f;margin:8px 0}
+.overlay{position:fixed;inset:0;background:#164b1bcc;display:none;align-items:center;justify-content:center;padding:18px}
+.modal{background:#fff;border:2px solid #35ad43;border-radius:18px;padding:24px;text-align:center;width:min(92%,380px);color:#245b2b}
+.modal h2{margin:5px 0 10px}.modal button{border:0;background:#35ad43;color:white;padding:10px 18px;border-radius:9px;font-weight:800}
+@media(max-width:600px){
+ .page{padding:7px 4px}.top{height:68px}.stat-value{font-size:20px}
+ .board{grid-template-columns:repeat(6,minmax(0,1fr));gap:3px}
+ .tile{aspect-ratio:1.12/1;padding:3px}
+}
+@media(max-width:380px){
+ .board{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+
+.illustration{width:62%;height:53%;object-fit:contain;display:block;margin:5px auto 1px}
+.tile.en{flex-direction:column;gap:1px}
+.tile.en .cardtext{font-size:clamp(8px,1.1vw,13px);font-weight:800;line-height:1.1}
+.tile.vi .cardtext{font-size:clamp(8px,1.2vw,13px);font-weight:700;line-height:1.15}
+@media(max-width:600px){.illustration{width:68%;height:50%}.tile.en .cardtext,.tile.vi .cardtext{font-size:9px}}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="top">
+    <div><div class="stat-label">Bàn</div><div class="stat-value">1</div></div>
+    <div><div class="stat-label">Lượt Đôi</div><div class="stat-value" id="moves">0</div></div>
+    <div><div class="stat-label">Điểm</div><div class="stat-value" id="score">0</div></div>
+  </div>
+
+  <div class="controls">
+    <button class="btn" onclick="newGame()">🔄 Chơi lại</button>
+    <button class="btn" onclick="useHint()">💡 Gợi ý</button>
+  </div>
+
+  <div class="message" id="message">Tìm 2 thẻ ghép đôi: 1 English + 1 Tiếng Việt</div>
+  <div class="bar"><i id="progress"></i></div>
+
+  <div class="board-wrap">
+    <div class="board" id="board"></div>
+  </div>
+  <div class="legend">🟦 English &nbsp; • &nbsp; 🟩 Tiếng Việt &nbsp; • &nbsp; Ghép đúng → thẻ biến mất</div>
+</div>
+
+<div class="overlay" id="overlay">
+ <div class="modal">
+  <div style="font-size:44px">🏆</div>
+  <h2>Hoàn thành!</h2>
+  <p id="result"></p>
+  <button onclick="newGame()">Chơi lại</button>
+ </div>
+</div>
+
+<script>
+const ILLUSTRATIONS={"tournament": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHg9JzEwJyB5PSc1MCcgd2lkdGg9JzEwMCcgaGVpZ2h0PSc3JyByeD0nMycgZmlsbD0nIzYwYTVmYScvPjxjaXJjbGUgY3g9JzI4JyBjeT0nNDAnIHI9JzknIGZpbGw9JyNmYmJmMjQnLz48Y2lyY2xlIGN4PSc2MCcgY3k9JzMzJyByPSc5JyBmaWxsPScjMzRkMzk5Jy8+PGNpcmNsZSBjeD0nOTInIGN5PSc0MCcgcj0nOScgZmlsbD0nI2Y4NzE3MScvPjxwYXRoIGQ9J000OCAxNGgyNGwtNCAxOEg1MnonIGZpbGw9JyNmYWNjMTUnLz48cGF0aCBkPSdNNTMgMTRoMTR2LTVINTN6JyBmaWxsPScjZjU5ZTBiJy8+PC9zdmc+", "practice": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxjaXJjbGUgY3g9JzYwJyBjeT0nMzgnIHI9JzI1JyBmaWxsPScjZmI5MjNjJy8+PHBhdGggZD0nTTM1IDM4aDUwTTYwIDEzYzggMTAgOCA0MCAwIDUwTTYwIDEzYy04IDEwLTggNDAgMCA1MCcgc3Ryb2tlPSd3aGl0ZScgc3Ryb2tlLXdpZHRoPSczJyBmaWxsPSdub25lJy8+PHBhdGggZD0nTTE4IDY2aDg0JyBzdHJva2U9JyMyNTYzZWInIHN0cm9rZS13aWR0aD0nNycgc3Ryb2tlLWxpbmVjYXA9J3JvdW5kJy8+PC9zdmc+", "excited": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxjaXJjbGUgY3g9JzYwJyBjeT0nNDMnIHI9JzI0JyBmaWxsPScjZmJiZjI0Jy8+PGNpcmNsZSBjeD0nNTEnIGN5PSczOCcgcj0nMycvPjxjaXJjbGUgY3g9JzY5JyBjeT0nMzgnIHI9JzMnLz48cGF0aCBkPSdNNDkgNTBxMTEgMTMgMjIgMCcgc3Ryb2tlPScjZGMyNjI2JyBzdHJva2Utd2lkdGg9JzQnIGZpbGw9J25vbmUnLz48cGF0aCBkPSdNMTkgMjJsOCA3TTEwMSAyMmwtOCA3TTYwIDd2MTAnIHN0cm9rZT0nI2Y5NzMxNicgc3Ryb2tlLXdpZHRoPSc0Jy8+PC9zdmc+", "training": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxwYXRoIGQ9J00yMCA1MWwzMS0yMCAxOSAxMyAyNyA2YzggMiA4IDExLTEgMTNIMjVjLTggMC0xMC04LTUtMTJ6JyBmaWxsPScjMjU2M2ViJy8+PHBhdGggZD0nTTUwIDMxbDEzIDEzTTU4IDI5bDEzIDEzJyBzdHJva2U9J3doaXRlJyBzdHJva2Utd2lkdGg9JzQnLz48L3N2Zz4=", "present": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHg9JzI4JyB5PSczMCcgd2lkdGg9JzY0JyBoZWlnaHQ9JzQwJyByeD0nNScgZmlsbD0nI2VmNDQ0NCcvPjxwYXRoIGQ9J002MCAzMHY0ME0yOCA0M2g2NCcgc3Ryb2tlPScjZmFjYzE1JyBzdHJva2Utd2lkdGg9JzcnLz48cGF0aCBkPSdNNjAgMzBjLTEyLTUtMjItMTAtMTYtMTcgNi02IDE1IDMgMTYgMTd6bTAgMGMxMi01IDIyLTEwIDE2LTE3LTYtNi0xNSAzLTE2IDE3eicgZmlsbD0nI2ZhY2MxNScvPjwvc3ZnPg==", "bottle": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHg9JzQ1JyB5PScxNycgd2lkdGg9JzMwJyBoZWlnaHQ9JzUwJyByeD0nOCcgZmlsbD0nIzM4YmRmOCcvPjxyZWN0IHg9JzUwJyB5PScxMCcgd2lkdGg9JzIwJyBoZWlnaHQ9JzknIHJ4PScyJyBmaWxsPScjMGVhNWU5Jy8+PHBhdGggZD0nTTQ1IDM1aDMwJyBzdHJva2U9J3doaXRlJyBzdHJva2Utd2lkdGg9JzQnLz48L3N2Zz4=", "player": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxjaXJjbGUgY3g9JzYwJyBjeT0nMTgnIHI9JzknIGZpbGw9JyNmMmM2YTAnLz48cGF0aCBkPSdNNDggMjloMjR2MjVINDh6JyBmaWxsPScjMjU2M2ViJy8+PHBhdGggZD0nTTQ4IDM1TDMyIDQ4TTcyIDM1bDE2IDEzTTU1IDU0TDQ1IDc0TTY1IDU0bDEwIDIwJyBzdHJva2U9JyMxNzIwMzMnIHN0cm9rZS13aWR0aD0nNycgc3Ryb2tlLWxpbmVjYXA9J3JvdW5kJy8+PGNpcmNsZSBjeD0nOTQnIGN5PSc2MScgcj0nOScgZmlsbD0nd2hpdGUnIHN0cm9rZT0nIzExMTgyNycgc3Ryb2tlLXdpZHRoPScyJy8+PC9zdmc+", "opportunity": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxwYXRoIGQ9J00yMiA2M2g3Nicgc3Ryb2tlPScjNjQ3NDhiJyBzdHJva2Utd2lkdGg9JzUnLz48cGF0aCBkPSdNMzUgNjNWMjhoNTB2MzUnIGZpbGw9JyNiZmRiZmUnIHN0cm9rZT0nIzI1NjNlYicgc3Ryb2tlLXdpZHRoPSc0Jy8+PHBhdGggZD0nTTQ4IDI4di05aDI0djknIGZpbGw9J25vbmUnIHN0cm9rZT0nIzI1NjNlYicgc3Ryb2tlLXdpZHRoPSc0Jy8+PHBhdGggZD0nTTYwIDQzVjIxTTYwIDIxbC03IDdNNjAgMjFsNyA3JyBzdHJva2U9JyMxNmEzNGEnIHN0cm9rZS13aWR0aD0nNCcgZmlsbD0nbm9uZScvPjwvc3ZnPg==", "picky": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxjaXJjbGUgY3g9JzYwJyBjeT0nMzknIHI9JzI0JyBmaWxsPScjZmJiZjI0Jy8+PGNpcmNsZSBjeD0nNTEnIGN5PSczNicgcj0nMycvPjxjaXJjbGUgY3g9JzY5JyBjeT0nMzYnIHI9JzMnLz48cGF0aCBkPSdNNDkgNTFxMTEtNyAyMiAwJyBzdHJva2U9JyNkYzI2MjYnIHN0cm9rZS13aWR0aD0nNCcgZmlsbD0nbm9uZScvPjxwYXRoIGQ9J00yMyAxNmw4IDhNOTcgMTZsLTggOCcgc3Ryb2tlPScjZWY0NDQ0JyBzdHJva2Utd2lkdGg9JzQnLz48L3N2Zz4=", "practical": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHg9JzI1JyB5PScyNScgd2lkdGg9JzcwJyBoZWlnaHQ9JzQyJyByeD0nNicgZmlsbD0nI2ZiYmYyNCcvPjxwYXRoIGQ9J00zOCAyNXYtOGg0NHY4JyBmaWxsPSdub25lJyBzdHJva2U9JyM5MjQwMGUnIHN0cm9rZS13aWR0aD0nNScvPjxwYXRoIGQ9J000MiA0M2gzNk00MiA1M2gyMycgc3Ryb2tlPSd3aGl0ZScgc3Ryb2tlLXdpZHRoPSc0Jy8+PC9zdmc+", "shirts": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxwYXRoIGQ9J00zNiAyMEwxOCAzMmwxMCAxNCAxMC02djI1aDQ0VjQwbDEwIDYgMTAtMTQtMTgtMTItMTAgOEg0NnonIGZpbGw9JyMyNTYzZWInLz48dGV4dCB4PSc2MCcgeT0nNTEnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGZvbnQtc2l6ZT0nMTgnIGZvbnQtd2VpZ2h0PSdib2xkJyBmaWxsPSd3aGl0ZSc+MTA8L3RleHQ+PC9zdmc+", "footballshoes": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxwYXRoIGQ9J00yMCA0OGwyOC0xNyAxOCAxMiAyNSA1YzggMiA5IDExIDAgMTNIMjVjLTggMC0xMC05LTUtMTN6JyBmaWxsPScjMjJjNTVlJy8+PHBhdGggZD0nTTQ4IDMxbDEyIDEzTTU1IDI5bDEyIDEzJyBzdHJva2U9J3doaXRlJyBzdHJva2Utd2lkdGg9JzQnLz48cGF0aCBkPSdNMjcgNjJoNjUnIHN0cm9rZT0nIzE3MjAzMycgc3Ryb2tlLXdpZHRoPSc0Jy8+PC9zdmc+", "sleeping": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxwYXRoIGQ9J00yNSA2MlYyOGg3MHYzNCcgZmlsbD0nIzhiNWNmNicvPjxwYXRoIGQ9J00yNSAyOGwxNS0xMyAxNSAxMyAxNS0xMyAyNSAxMycgZmlsbD0nI2E3OGJmYScvPjxwYXRoIGQ9J000MyA0N2gzNScgc3Ryb2tlPSd3aGl0ZScgc3Ryb2tlLXdpZHRoPSc1Jy8+PHRleHQgeD0nODQnIHk9JzI0JyBmb250LXNpemU9JzE3JyBmaWxsPScjMjU2M2ViJz5aPC90ZXh0Pjx0ZXh0IHg9Jzk3JyB5PScxMycgZm9udC1zaXplPScxMycgZmlsbD0nIzI1NjNlYic+WjwvdGV4dD48L3N2Zz4=", "blanket": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxwYXRoIGQ9J00yMCAyMmg4MHY0M0gyMHonIGZpbGw9JyNmNDcyYjYnLz48cGF0aCBkPSdNMjAgMzJoODBNMjAgNDNoODBNMjAgNTRoODAnIHN0cm9rZT0nd2hpdGUnIHN0cm9rZS13aWR0aD0nMycgb3BhY2l0eT0nLjgnLz48cGF0aCBkPSdNMzAgMjJ2NDNNNDUgMjJ2NDNNNjAgMjJ2NDNNNzUgMjJ2NDNNOTAgMjJ2NDMnIHN0cm9rZT0nd2hpdGUnIHN0cm9rZS13aWR0aD0nMicgb3BhY2l0eT0nLjYnLz48L3N2Zz4=", "suncream": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxjaXJjbGUgY3g9JzgyJyBjeT0nMjMnIHI9JzEzJyBmaWxsPScjZmFjYzE1Jy8+PHBhdGggZD0nTTgyIDR2OU04MiAzM3Y5TTYzIDIzaDlNOTIgMjNoOU02OSAxMGw3IDdNOTUgMTBsLTcgNycgc3Ryb2tlPScjZjU5ZTBiJyBzdHJva2Utd2lkdGg9JzMnLz48cmVjdCB4PSczMScgeT0nMjcnIHdpZHRoPSczNScgaGVpZ2h0PSczNScgcng9JzYnIGZpbGw9J3doaXRlJyBzdHJva2U9JyMzOGJkZjgnIHN0cm9rZS13aWR0aD0nMycvPjxwYXRoIGQ9J00zOSA0MGgxOU0zOSA0OWgxMycgc3Ryb2tlPScjMzhiZGY4JyBzdHJva2Utd2lkdGg9JzMnLz48L3N2Zz4=", "money": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxyZWN0IHg9JzIyJyB5PScyNCcgd2lkdGg9Jzc2JyBoZWlnaHQ9JzQyJyByeD0nNScgZmlsbD0nIzIyYzU1ZScvPjxyZWN0IHg9JzMwJyB5PSczMScgd2lkdGg9JzYwJyBoZWlnaHQ9JzI4JyByeD0nNCcgZmlsbD0nI2JiZjdkMCcvPjxjaXJjbGUgY3g9JzYwJyBjeT0nNDUnIHI9JzknIGZpbGw9JyMyMmM1NWUnLz48dGV4dCB4PSc2MCcgeT0nNTEnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGZvbnQtc2l6ZT0nMTcnIGZvbnQtd2VpZ2h0PSdib2xkJyBmaWxsPSd3aGl0ZSc+JDwvdGV4dD48L3N2Zz4=", "towel": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxMjAgODAnPjxwYXRoIGQ9J00yNSAxOGg3MHY0OEgyNXonIGZpbGw9JyMzOGJkZjgnLz48cGF0aCBkPSdNMjUgMjhoNzBNMjUgMzloNzBNMjUgNTBoNzAnIHN0cm9rZT0nI2UwZjJmZScgc3Ryb2tlLXdpZHRoPSc0Jy8+PHBhdGggZD0nTTQyIDE4djQ4TTU4IDE4djQ4TTc0IDE4djQ4JyBzdHJva2U9JyMwZWE1ZTknIHN0cm9rZS13aWR0aD0nMicvPjwvc3ZnPg=="};
+function illustrationFor(text){
+ const t=text.toLowerCase();
+ if(t==="tournament")return ILLUSTRATIONS.tournament;
+ if(t==="practice")return ILLUSTRATIONS.practice;
+ if(t==="excited")return ILLUSTRATIONS.excited;
+ if(t.includes("training shoes"))return ILLUSTRATIONS.training;
+ if(t==="present")return ILLUSTRATIONS.present;
+ if(t==="water bottle")return ILLUSTRATIONS.bottle;
+ if(t.includes("football player"))return ILLUSTRATIONS.player;
+ if(t==="opportunity")return ILLUSTRATIONS.opportunity;
+ if(t==="picky")return ILLUSTRATIONS.picky;
+ if(t==="practical")return ILLUSTRATIONS.practical;
+ if(t.includes("match shirts"))return ILLUSTRATIONS.shirts;
+ if(t.includes("football shoes"))return ILLUSTRATIONS.footballshoes;
+ if(t.includes("sleeping bag"))return ILLUSTRATIONS.sleeping;
+ if(t==="blanket")return ILLUSTRATIONS.blanket;
+ if(t==="suncream")return ILLUSTRATIONS.suncream;
+ if(t==="some money")return ILLUSTRATIONS.money;
+ if(t==="towel")return ILLUSTRATIONS.towel;
+ return "";
+}
+
+const ORIGINAL=[{pair:0,lang:'en',text:'Tournament'},{pair:0,lang:'vi',text:'trận thi đấu'},{pair:1,lang:'en',text:'Practice'},{pair:1,lang:'vi',text:'luyện tập'},{pair:2,lang:'en',text:'Excited'},{pair:2,lang:'vi',text:'phấn khích'},{pair:3,lang:'en',text:'a pair of training shoes'},{pair:3,lang:'vi',text:'một đôi giày tập'},{pair:4,lang:'en',text:'present'},{pair:4,lang:'vi',text:'món quà'},{pair:5,lang:'en',text:'water bottle'},{pair:5,lang:'vi',text:'bình nước'},{pair:6,lang:'en',text:'football player'},{pair:6,lang:'vi',text:'cầu thủ bóng đá'},{pair:7,lang:'en',text:'opportunity'},{pair:7,lang:'vi',text:'cơ hội'},{pair:8,lang:'en',text:'picky'},{pair:8,lang:'vi',text:'kén chọn'},{pair:9,lang:'en',text:'Practical'},{pair:9,lang:'vi',text:'thực tế'},{pair:10,lang:'en',text:'match shirts'},{pair:10,lang:'vi',text:'áo đấu'},{pair:11,lang:'en',text:'football shoes'},{pair:11,lang:'vi',text:'giày bóng đá'},{pair:12,lang:'en',text:'sleeping bag'},{pair:12,lang:'vi',text:'túi ngủ'},{pair:13,lang:'en',text:'blanket'},{pair:13,lang:'vi',text:'chăn'},{pair:14,lang:'en',text:'water bottle'},{pair:14,lang:'vi',text:'chai nước'},{pair:15,lang:'en',text:'suncream'},{pair:15,lang:'vi',text:'kem chống nắng'},{pair:16,lang:'en',text:'some money'},{pair:16,lang:'vi',text:'một chút tiền'},{pair:17,lang:'en',text:'towel'},{pair:17,lang:'vi',text:'khăn'}], TOTAL=18;
+let cards=[],first=null,locked=false,moves=0,score=0,found=0;
+
+function shuffle(a){
+ for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
+ return a
+}
+function esc(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+
+function newGame(){
+ cards=shuffle(ORIGINAL.map((x,i)=>({...x,id:i,matched:false})));
+ first=null;locked=false;moves=0;score=0;found=0;
+ document.getElementById("overlay").style.display="none";
+ render();update();
+ msg("Tìm 2 thẻ ghép đôi: 1 English + 1 Tiếng Việt");
+}
+function render(){
+ const board=document.getElementById("board");board.innerHTML="";
+ cards.forEach((c,i)=>{
+  const b=document.createElement("button");
+  b.className="tile "+c.lang;b.dataset.i=i;
+  b.innerHTML='<span class="flag">'+(c.lang==="en"?"EN":"VI")+'</span>'+
+ (c.lang==="en"
+   ? '<img class="illustration" src="'+illustrationFor(c.text)+'" alt="">'
+   : '')+
+ '<span class="cardtext">'+esc(c.text)+'</span>';
+  b.onclick=()=>pick(i,b);board.appendChild(b);
+ })
+}
+function pick(i,el){
+ if(locked||cards[i].matched||i===first)return;
+ if(first===null){first=i;el.classList.add("selected");return}
+ locked=true;moves++;
+ el.classList.add("selected");
+ const a=cards[first],b=cards[i];
+ const e1=document.querySelector('[data-i="'+first+'"]');
+ if(a.pair===b.pair && a.lang!==b.lang){
+  e1.classList.add("correct");el.classList.add("correct");
+  setTimeout(()=>{
+   cards[first].matched=true;cards[i].matched=true;
+   e1.classList.remove("selected","correct");el.classList.remove("selected","correct");
+   e1.classList.add("matched");el.classList.add("matched");
+   found++;score+=100;msg("✓ Chính xác! +100 điểm",true);
+   first=null;locked=false;update();
+   if(found===TOTAL)finish();
+  },280);
+ }else{
+  e1.classList.add("wrong");el.classList.add("wrong");
+  msg("✗ Chưa đúng. Hãy tìm cặp khác.",false);
+  setTimeout(()=>{
+   e1.classList.remove("selected","wrong");el.classList.remove("selected","wrong");
+   first=null;locked=false;update();
+  },600)
+ }
+ update();
+}
+function useHint(){
+ if(locked)return;
+ let r=[];
+ for(let i=0;i<cards.length;i++)if(!cards[i].matched)
+  for(let j=i+1;j<cards.length;j++)
+   if(!cards[j].matched&&cards[i].pair===cards[j].pair&&cards[i].lang!==cards[j].lang)r.push([i,j]);
+ if(!r.length)return;
+ const [a,b]=r[Math.floor(Math.random()*r.length)];
+ score=Math.max(0,score-20);
+ const ea=document.querySelector('[data-i="'+a+'"]'),eb=document.querySelector('[data-i="'+b+'"]');
+ ea.classList.add("selected");eb.classList.add("selected");
+ msg("💡 Hai thẻ được viền cam là một cặp.");
+ setTimeout(()=>{ea.classList.remove("selected");eb.classList.remove("selected")},900);
+ update();
+}
+function update(){
+ document.getElementById("moves").textContent=moves;
+ document.getElementById("score").textContent=score;
+ document.getElementById("progress").style.width=(found/TOTAL*100)+"%";
+}
+function msg(t,good=null){
+ const x=document.getElementById("message");x.textContent=t;
+ x.className="message"+(good===true?" good":good===false?" bad":"");
+}
+function finish(){
+ document.getElementById("result").innerHTML=
+ "Bạn đã tìm đủ <b>"+TOTAL+" cặp</b>!<br>Điểm: <b>"+score+"</b> · Lượt đôi: <b>"+moves+"</b>";
+ document.getElementById("overlay").style.display="flex";
+}
+newGame();
+</script>
+</body>
+</html>
